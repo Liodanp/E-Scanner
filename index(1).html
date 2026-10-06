@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Gestion Commerce — Version 3.0</title>
+  <script src="https://unpkg.com/html5-qrcode" defer></script>
+  <style>
+    :root {
+      --bg:#f1f5f9;--card:#ffffff;--text:#0f172a;--muted:#64748b;
+      --primary:#2563eb;--success:#16a34a;--danger:#dc2626;--warning:#d97706;
+      --border:#e2e8f0;--dark:#0f172a;--shadow:0 10px 25px rgba(15,23,42,.08);
+      --radius:14px;
+    }
+    * { box-sizing:border-box; }
+    html, body {
+      margin:0; padding:0; background:var(--bg); color:var(--text);
+      font-family:Inter, Arial, sans-serif;
+    }
+    body { min-height:100vh; }
+    button, input, select { font:inherit; }
+    button { cursor:pointer; border:none; }
+    .hidden { display:none !important; }
+    .muted { color:var(--muted); }
+    .page { min-height:calc(100vh - 80px); }
+    .container { max-width:1400px; margin:0 auto; padding:20px; }
+    .header {
+      position:sticky; top:0; z-index:50;
+      background:var(--dark); color:#fff;
+      box-shadow:0 4px 18px rgba(0,0,0,.15);
+    }
+    .header-inner {
+      max-width:1400px; margin:0 auto; padding:14px 22px;
+      display:flex; align-items:center; justify-content:space-between; gap:15px;
+    }
+    .brand { font-size:20px; font-weight:800; line-height:1.1; }
+    .brand small {
+      display:block; font-size:11px; color:#cbd5e1; font-weight:600;
+    }
+    .user-pill {
+      background:rgba(255,255,255,.08); padding:8px 12px; border-radius:999px;
+      font-weight:700; border:1px solid rgba(255,255,255,.12);
+    }
+    .home {
+      display:flex; align-items:center; justify-content:center;
+      min-height:calc(100vh - 80px); padding:30px;
+    }
+    .home-box { width:min(850px,100%); text-align:center; }
+    .logo { font-size:70px; line-height:1; }
+    h1, h2, h3, h4, p { margin:0; }
+    .home h1 { font-size:38px; margin:12px 0 10px; }
+    .home p { color:var(--muted); }
+    .role-grid {
+      display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:18px; margin-top:28px;
+    }
+    .role-card {
+      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:26px 18px; text-align:center;
+    }
+    .role-card .icon { font-size:42px; margin-bottom:10px; }
+    .role-card h2 { font-size:24px; margin-bottom:8px; }
+    .role-card p { color:var(--muted); margin-bottom:16px; line-height:1.6; }
+    .footer-note {
+      color:var(--muted); font-size:12px; margin-top:24px; line-height:1.5;
+    }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      min-height:42px; padding:10px 14px; border-radius:10px; font-weight:700;
+      transition:.15s ease; white-space:nowrap;
+    }
+    .btn:hover { filter:brightness(.97); transform:translateY(-1px); }
+    .btn:active { transform:translateY(0); }
+    .btn-block { width:100%; }
+    .btn-sm { min-height:36px; padding:8px 10px; font-size:12px; }
+    .btn-primary { background:var(--primary); color:#fff; }
+    .btn-dark { background:var(--dark); color:#fff; }
+    .btn-success { background:var(--success); color:#fff; }
+    .btn-danger { background:var(--danger); color:#fff; }
+    .btn-gray { background:#e2e8f0; color:var(--text); }
+    .login-wrap {
+      min-height:calc(100vh - 80px); display:flex; align-items:center; justify-content:center; padding:25px;
+    }
+    .login-card {
+      width:min(430px,100%); background:#fff; border:1px solid var(--border);
+      border-radius:var(--radius); box-shadow:var(--shadow); padding:20px;
+    }
+    .login-card h2 { margin:12px 0 4px; font-size:28px; }
+    .field { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+    .field label { font-weight:700; font-size:13px; color:var(--text); }
+    .field input, .field select {
+      width:100%; min-height:44px; padding:10px 12px; border:1px solid var(--border);
+      border-radius:10px; background:#fff; outline:none;
+    }
+    .field input:focus, .field select:focus {
+      border-color:var(--primary); box-shadow:0 0 0 3px rgba(37,99,235,.12);
+    }
+    .topbar {
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    .topbar h2 { font-size:32px; }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .tabs {
+      display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;
+    }
+    .tab {
+      background:#e2e8f0; color:var(--text); padding:9px 12px; border-radius:10px; font-weight:700;
+    }
+    .tab.active { background:var(--primary); color:#fff; }
+    .card {
+      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:18px;
+    }
+    .grid { display:grid; gap:16px; }
+    .two { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .feature-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:24px; text-align:left; }
+    .feature { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; box-shadow:var(--shadow); }
+    .feature .icon { font-size:28px; margin-bottom:8px; }
+    .feature h3 { margin-bottom:6px; font-size:16px; }
+    .feature p { line-height:1.5; font-size:13px; }
+    .home-actions { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:22px; }
+    .register-note { margin-top:14px; padding:10px 12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; font-size:12px; color:#1e3a8a; line-height:1.5; }
+    .scanner-status { margin-top:10px; padding:10px 12px; border-radius:10px; background:#f8fafc; color:var(--muted); font-size:12px; text-align:center; }
+    .scanner-box video { width:100% !important; max-height:62vh; object-fit:cover; border-radius:10px; }
+    .modal-content.scanner-modal-content { width:min(560px,100%); }
+    .safe-area { padding-bottom:max(18px, env(safe-area-inset-bottom)); }
+    @media (max-width:900px) { .feature-grid, .two, .three { grid-template-columns:1fr; } }
+    .stats { grid-template-columns:repeat(4, minmax(0,1fr)); }
+    .stat {
+      background:linear-gradient(180deg,#fff,#f8fafc);
+      border:1px solid var(--border); border-radius:12px; padding:16px;
+    }
+    .stat span { display:block; color:var(--muted); font-size:12px; margin-bottom:8px; }
+    .stat strong { font-size:22px; }
+    .cashier-grid { grid-template-columns:minmax(0,1.4fr) minmax(320px,.85fr); }
+    .search-row { display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:14px; }
+    .product-list {
+      display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px;
+      max-height:540px; overflow:auto; padding-right:4px;
+    }
+    .product-item {
+      border:1px solid var(--border); border-radius:12px; padding:12px;
+      background:linear-gradient(180deg,#fff,#f8fafc); cursor:pointer; transition:.15s ease;
+    }
+    .product-item:hover { border-color:var(--primary); transform:translateY(-1px); }
+    .product-item h4 { font-size:15px; margin-bottom:6px; }
+    .product-item .meta { font-size:12px; color:var(--muted); }
+    .section-title {
+      display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px;
+    }
+    .cart-items { max-height:380px; overflow:auto; }
+    .cart-empty { padding:18px 10px; color:var(--muted); text-align:center; }
+    .cart-item {
+      display:grid; grid-template-columns:1fr auto; gap:10px;
+      border-bottom:1px solid var(--border); padding:12px 0;
+    }
+    .cart-item h4 { font-size:14px; margin-bottom:4px; }
+    .cart-item .meta { font-size:12px; color:var(--muted); }
+    .qty-box { display:flex; align-items:center; gap:8px; justify-content:flex-end; }
+    .qty-btn {
+      width:28px; height:28px; border-radius:8px; background:#e2e8f0; color:var(--text); font-weight:800;
+    }
+    .payment-grid {
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:10px;
+    }
+    .payment-box {
+      background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:10px;
+    }
+    .payment-box label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .payment-box input {
+      width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:8px; outline:none;
+    }
+    .summary { margin-top:14px; border-top:1px solid var(--border); padding-top:12px; }
+    .summary-line {
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:7px 0; font-size:15px;
+    }
+    .badge {
+      display:inline-flex; align-items:center; justify-content:center; padding:5px 8px; border-radius:999px;
+      font-weight:700; font-size:11px; border:1px solid transparent;
+    }
+    .badge-green { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
+    .badge-orange { background:#fff7ed; color:#9a5a00; border-color:#fed7aa; }
+    .badge-red { background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+    .table-wrap { overflow:auto; }
+    table.table { width:100%; border-collapse:collapse; font-size:13px; }
+    .table th, .table td {
+      text-align:left; padding:10px; border-bottom:1px solid var(--border); vertical-align:middle;
+    }
+    .table th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; }
+    .table tr:hover { background:#f8fafc; }
+    .link-btn {
+      background:none; color:var(--primary); font-weight:800; padding:0; border:none;
+    }
+    .message {
+      position:fixed; right:20px; bottom:20px; z-index:2000; max-width:380px;
+      padding:13px 16px; border-radius:12px; box-shadow:var(--shadow); font-weight:700;
+      display:none; color:#fff;
+    }
+    .message.show { display:block; }
+    .message.success { background:var(--success); }
+    .message.error { background:var(--danger); }
+    .message.info { background:#334155; }
+    .message.warning { background:var(--warning); }
+    .modal {
+      position:fixed; inset:0; background:rgba(15,23,42,.65); z-index:1000;
+      display:none; align-items:center; justify-content:center; padding:18px;
+    }
+    .modal.show { display:flex; }
+    .modal-content {
+      background:#fff; border-radius:14px; width:min(720px,100%); max-height:90vh; overflow:auto;
+      box-shadow:0 28px 60px rgba(15,23,42,.22);
+    }
+    .modal-head {
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:18px 18px 10px; border-bottom:1px solid var(--border);
+    }
+    .close {
+      width:34px; height:34px; border-radius:8px; background:#f1f5f9; color:var(--text); font-size:22px;
+    }
+    .modal-body { padding:18px; }
+    .scanner-box {
+      min-height:200px; border:1px dashed #94a3b8; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f8fafc;
+    }
+    .reader-actions { display:flex; gap:8px; margin-top:10px; }
+    .filter-grid {
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:16px;
+    }
+    .danger-zone { border:1px solid #fecaca; background:#fff7f7; }
+    .empty { padding:22px; text-align:center; color:var(--muted); }
+    @media (max-width:1100px) {
+      .stats { grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .cashier-grid { grid-template-columns:1fr; }
+      .product-list { grid-template-columns:repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width:700px) {
+      .container { padding:12px; }
+      .role-grid, .filter-grid, .stats, .product-list, .payment-grid { grid-template-columns:1fr; }
+      .header-inner { padding:12px 14px; }
+      .brand { font-size:18px; }
+      .topbar h2 { font-size:26px; }
+      .home h1 { font-size:28px; }
+      .home { padding:18px 12px; }
+      .modal { padding:8px; align-items:flex-end; }
+      .modal-content { max-height:94vh; border-radius:16px 16px 0 0; }
+      .scanner-modal-content { max-height:100vh; }
+      .scanner-box { min-height:55vh; }
+      .reader-actions .btn { flex:1; }
+      .btn { min-height:46px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        🛒 GESTION COMMERCE
+        <small>Version 3.0 — Caisse • Stock • Ventes • Supervision</small>
+      </div>
+      <div id="headerUser" class="user-pill">Non connecté</div>
+    </div>
+  </header>
+
+  <div id="message" class="message"></div>
+
+  <section id="homePage" class="page home">
+    <div class="home-box">
+      <div class="logo">🛒</div>
+      <h1>Gestion Commerce 3.0</h1>
+      <p>Une gestion plus fiable du stock, des ventes, des paiements et de la supervision.</p>
+      <div class="home-actions">
+        <button class="btn btn-primary" onclick="openLogin('vendeur')">🔐 Se connecter</button>
+        <button class="btn btn-gray" onclick="openRegister()">📝 Créer un compte</button>
+      </div>
+      <div class="feature-grid">
+        <div class="feature"><div class="icon">📦</div><h3>Stock</h3><p>Gérez les produits, les stocks minimums et les mouvements d’entrée ou de sortie.</p></div>
+        <div class="feature"><div class="icon">📷</div><h3>Scan mobile</h3><p>Scannez rapidement les codes-barres avec la caméra du téléphone et ajoutez l’article au panier.</p></div>
+        <div class="feature"><div class="icon">📊</div><h3>Supervision</h3><p>Suivez les ventes, le chiffre d’affaires, les paiements, les utilisateurs et les exports depuis un ordinateur.</p></div>
+      </div>
+      <div class="role-grid">
+        <div class="role-card">
+          <div class="icon">👨‍💼</div>
+          <h2>Espace vendeur</h2>
+          <p>Encaisser les ventes, scanner les articles et imprimer les tickets.</p>
+          <button class="btn btn-primary" onclick="openLogin('vendeur')">Ouvrir</button>
+        </div>
+        <div class="role-card">
+          <div class="icon">🧑‍💼</div>
+          <h2>Espace superviseur</h2>
+          <p>Suivre le chiffre d'affaires, le stock, les mouvements et les ventes.</p>
+          <button class="btn btn-dark" onclick="openLogin('superviseur')">Ouvrir</button>
+        </div>
+      </div>
+      <div class="register-note">ℹ️ Cette version fonctionne localement dans le navigateur. La création de compte en libre-service crée un compte <b>vendeur</b>. Les comptes superviseur restent gérés par un superviseur.</div>
+      <p class="footer-note">Mode local : les données sont enregistrées dans le navigateur. Pour une utilisation multi-postes, un backend est recommandé.</p>
+    </div>
+  </section>
+
+  <section id="loginPage" class="page login-wrap hidden">
+    <div class="login-card">
+      <button class="btn btn-gray btn-sm" onclick="backHome()">← Retour</button>
+      <h2 id="loginTitle">Connexion</h2>
+      <p id="loginDesc" class="muted"></p>
+      <div class="field">
+        <label>Nom / identifiant</label>
+        <input id="loginName" type="text" placeholder="Ex : Pascal" />
+      </div>
+      <div class="field">
+        <label>PIN</label>
+        <input id="loginPin" type="password" inputmode="numeric" maxlength="8" placeholder="Votre PIN" onkeydown="if(event.key==='Enter') login()" />
+      </div>
+      <button class="btn btn-primary btn-block" onclick="login()">🔐 Se connecter</button>
+      <p class="footer-note">Démo locale : vendeur <b>1234</b> • superviseur <b>9999</b>. Changez-les dans le code avant un usage réel.</p>
+    </div>
+  </section>
+
+  <section id="registerPage" class="page login-wrap hidden">
+    <div class="login-card">
+      <button class="btn btn-gray btn-sm" onclick="backHome()">← Retour</button>
+      <h2>📝 Créer un compte</h2>
+      <p class="muted">Créez votre accès vendeur pour utiliser la caisse.</p>
+      <div class="field"><label>Nom complet / identifiant</label><input id="registerName" type="text" autocomplete="name" placeholder="Ex : Jean" /></div>
+      <div class="field"><label>PIN (4 à 8 chiffres)</label><input id="registerPin" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password" placeholder="Choisissez un PIN" /></div>
+      <div class="field"><label>Confirmer le PIN</label><input id="registerPinConfirm" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password" placeholder="Répétez le PIN" onkeydown="if(event.key==='Enter') registerAccount()" /></div>
+      <button class="btn btn-success btn-block" onclick="registerAccount()">Créer mon compte vendeur</button>
+      <p class="footer-note">Un compte superviseur ne peut pas être créé depuis cette page. Il doit être ajouté depuis l’espace de supervision.</p>
+    </div>
+  </section>
+
+  <section id="sellerPage" class="page hidden">
+    <div class="container">
+      <div class="topbar">
+        <div>
+          <h2>💳 Caisse</h2>
+          <span class="muted">Nouvelle transaction</span>
+        </div>
+        <div class="actions">
+          <button class="btn btn-gray" onclick="clearSale()">Nouvelle vente</button>
+          <button class="btn btn-dark" onclick="logout()">Déconnexion</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button id="sellerTabCash" class="tab active" onclick="showSellerTab('cash')">🛒 Caisse</button>
+        <button id="sellerTabHistory" class="tab" onclick="showSellerTab('history')">📜 Historique</button>
+      </div>
+
+      <div id="sellerCashTab">
+        <div id="sellerStats" class="grid stats"></div>
+        <div class="grid cashier-grid" style="margin-top:16px">
+          <div class="card">
+            <div class="search-row">
+              <input id="productSearch" type="text" placeholder="Rechercher par nom ou code-barres…" oninput="renderProductPicker()" />
+              <button class="btn btn-primary" onclick="openScanner()">📷 Scanner</button>
+            </div>
+            <div id="productPicker" class="product-list"></div>
+            <div class="section-title" style="margin-top:18px">
+              <h3>Panier</h3>
+              <button class="btn btn-gray btn-sm" onclick="clearSale()">Vider</button>
+            </div>
+            <div id="cartItems" class="cart-items"></div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin-top:0">💰 Paiement</h3>
+            <div class="field">
+              <label>Client</label>
+              <input id="customerName" type="text" placeholder="Client comptoir" />
+            </div>
+            <div class="field">
+              <label>Statut</label>
+              <select id="paymentStatus" onchange="updatePayment()">
+                <option value="PAYÉ">PAYÉ</option>
+                <option value="PARTIEL">PARTIEL</option>
+                <option value="NON PAYÉ">NON PAYÉ</option>
+              </select>
+            </div>
+            <div class="payment-grid">
+              <div class="payment-box"><label>💵 Espèces</label><input id="cashAmount" type="number" min="0" step="0.01" value="0" oninput="updatePayment()" /></div>
+              <div class="payment-box"><label>🌊 Wave</label><input id="waveAmount" type="number" min="0" step="0.01" value="0" oninput="updatePayment()" /></div>
+              <div class="payment-box"><label>🟠 Orange Money</label><input id="orangeAmount" type="number" min="0" step="0.01" value="0" oninput="updatePayment()" /></div>
+              <div class="payment-box"><label>🟡 MTN Money</label><input id="mtnAmount" type="number" min="0" step="0.01" value="0" oninput="updatePayment()" /></div>
+              <div class="payment-box"><label>🟢 Moov Money</label><input id="moovAmount" type="number" min="0" step="0.01" value="0" oninput="updatePayment()" /></div>
+            </div>
+            <div class="summary">
+              <div class="summary-line"><span>Total</span><b id="paymentTotal">0 F</b></div>
+              <div class="summary-line"><span>Payé</span><b id="paymentPaid">0 F</b></div>
+              <div class="summary-line"><span>Reste</span><b id="paymentRest">0 F</b></div>
+              <div class="summary-line"><span>Statut</span><b id="paymentStatusLabel">PAYÉ</b></div>
+            </div>
+            <button class="btn btn-success btn-block" style="margin-top:14px" onclick="validateSale()">✅ Enregistrer la vente</button>
+            <button class="btn btn-gray btn-block" style="margin-top:8px" onclick="printCurrentTicket()">🖨️ Imprimer ticket</button>
+          </div>
+        </div>
+      </div>
+      <div id="sellerHistoryTab" class="hidden"></div>
+    </div>
+  </section>
+
+  <section id="supervisorPage" class="page hidden">
+    <div class="container">
+      <div class="topbar">
+        <div>
+          <h2>📊 Supervision</h2>
+          <span class="muted">Pilotage du commerce</span>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="exportCSV()">⬇️ Export CSV</button>
+          <button class="btn btn-gray" onclick="logout()">Déconnexion</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="dashboard" onclick="showSupervisorTab('dashboard')">📊 Tableau de bord</button>
+        <button class="tab" data-tab="products" onclick="showSupervisorTab('products')">📦 Produits</button>
+        <button class="tab" data-tab="movements" onclick="showSupervisorTab('movements')">🔄 Mouvements</button>
+        <button class="tab" data-tab="sales" onclick="showSupervisorTab('sales')">🧾 Ventes</button>
+        <button class="tab" data-tab="users" onclick="showSupervisorTab('users')">👥 Utilisateurs</button>
+        <button class="tab" data-tab="settings" onclick="showSupervisorTab('settings')">⚙️ Paramètres</button>
+      </div>
+
+      <div id="supervisorDashboardTab"></div>
+      <div id="supervisorProductsTab" class="hidden"></div>
+      <div id="supervisorMovementsTab" class="hidden"></div>
+      <div id="supervisorSalesTab" class="hidden"></div>
+      <div id="supervisorUsersTab" class="hidden"></div>
+      <div id="supervisorSettingsTab" class="hidden"></div>
+    </div>
+  </section>
+
+  <div id="scannerModal" class="modal">
+    <div class="modal-content scanner-modal-content safe-area">
+      <div class="modal-head">
+        <h3>📷 Scanner un code-barres</h3>
+        <button class="close" onclick="closeScanner()">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="scannerBox" class="scanner-box"></div>
+        <div id="scannerStatus" class="scanner-status">Préparation de la caméra…</div>
+        <div class="reader-actions">
+          <button class="btn btn-gray" onclick="closeScanner()">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="unknownModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-head">
+        <h3>❓ Nouvel article</h3>
+        <button class="close" onclick="closeModal('unknownModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <p>Code détecté : <b id="unknownCode"></b></p>
+        <div class="field"><label>Nom du produit</label><input id="unknownName" type="text" placeholder="Ex : Riz 25kg" /></div>
+        <div class="field"><label>Prix unitaire</label><input id="unknownPrice" type="number" min="0" step="0.01" placeholder="0" /></div>
+        <div class="field"><label>Stock initial</label><input id="unknownStock" type="number" min="0" step="1" placeholder="0" /></div>
+        <div class="field"><label>Stock minimum</label><input id="unknownMinStock" type="number" min="0" step="1" placeholder="0" /></div>
+        <button class="btn btn-success btn-block" onclick="createUnknownProduct()">Ajouter le produit</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-head">
+        <h3 id="productModalTitle">Ajouter un produit</h3>
+        <button class="close" onclick="closeModal('productModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label>Code-barres</label><input id="editProductCode" type="text" /></div>
+        <div class="field"><label>Nom</label><input id="editProductName" type="text" /></div>
+        <div class="field"><label>Prix</label><input id="editProductPrice" type="number" min="0" step="0.01" /></div>
+        <div class="field"><label>Stock</label><input id="editProductStock" type="number" min="0" step="1" /></div>
+        <div class="field"><label>Stock minimum</label><input id="editProductMinStock" type="number" min="0" step="1" /></div>
+        <button class="btn btn-success btn-block" onclick="saveProduct()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="movementModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-head">
+        <h3>🔄 Mouvement de stock</h3>
+        <button class="close" onclick="closeModal('movementModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <p id="movementProductLabel"></p>
+        <div class="field"><label>Code produit</label><input id="movementProductCode" type="text" disabled /></div>
+        <div class="field">
+          <label>Type</label>
+          <select id="movementType">
+            <option value="ENTREE">Entrée</option>
+            <option value="SORTIE">Sortie</option>
+            <option value="AJUSTEMENT">Ajustement</option>
+          </select>
+        </div>
+        <div class="field"><label>Quantité</label><input id="movementQty" type="number" min="1" step="1" value="1" /></div>
+        <div class="field"><label>Motif</label><input id="movementReason" type="text" placeholder="Ex : achat, retour, correction..." /></div>
+        <button class="btn btn-success btn-block" onclick="saveMovement()">Enregistrer le mouvement</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="userModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-head">
+        <h3>👤 Nouvel utilisateur</h3>
+        <button class="close" onclick="closeModal('userModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label>Nom</label><input id="newUserName" type="text" /></div>
+        <div class="field"><label>PIN (4 à 8 chiffres)</label><input id="newUserPin" type="password" inputmode="numeric" maxlength="8" /></div>
+        <div class="field">
+          <label>Rôle</label>
+          <select id="newUserRole">
+            <option value="vendeur">Vendeur</option>
+            <option value="superviseur">Superviseur</option>
+          </select>
+        </div>
+        <button class="btn btn-success btn-block" onclick="saveUser()">Créer l'utilisateur</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'gestionCommerceV2';
+    const DEFAULT_USERS = [
+      { name: 'Pascal', pin: '1234', role: 'vendeur' },
+      { name: 'Admin', pin: '9999', role: 'superviseur' }
+    ];
+
+    const state = {
+      db: null,
+      cart: [],
+      currentUser: null,
+      currentRole: null,
+      scanner: null,
+      scannerRunning: false,
+      scannerBusy: false,
+      scannerScanHandled: false,
+      unknownBarcode: null,
+      editingProductCode: null
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const money = (n) => Number(n || 0).toLocaleString('fr-FR') + ' F';
+    const uid = (prefix = 'ID') => prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7).toUpperCase();
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (m) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    const safeNumber = (value, fallback = 0) => {
+      const n = Number(value);
+      return Number.isFinite(n) ? Math.max(0, n) : fallback;
+    };
+
+    function defaultDB() {
+      return {
+        version: 3,
+        products: [
+          { id: uid('P'), code: '001', name: 'Riz 25kg', price: 6500, stock: 12, minStock: 3, active: true },
+          { id: uid('P'), code: '002', name: 'Huile 1L', price: 3200, stock: 18, minStock: 5, active: true },
+          { id: uid('P'), code: '003', name: 'Tomates', price: 1200, stock: 25, minStock: 6, active: true },
+          { id: uid('P'), code: '004', name: 'Pain', price: 500, stock: 40, minStock: 10, active: true },
+          { id: uid('P'), code: '005', name: 'Café', price: 2800, stock: 9, minStock: 4, active: true }
+        ],
+        sales: [],
+        movements: [],
+        users: DEFAULT_USERS.map(u => ({ ...u })),
+        settings: { currency: 'F CFA' }
+      };
+    }
+
+    function safeParse(value, fallback) {
+      try { return JSON.parse(value ?? 'null') ?? fallback; }
+      catch { return fallback; }
+    }
+
+    function loadDB() {
+      const saved = safeParse(localStorage.getItem(STORAGE_KEY), null);
+      if (saved && Array.isArray(saved.products)) {
+        state.db = {
+          version: 3,
+          products: saved.products.map(p => ({
+            id: p.id || uid('P'),
+            code: String(p.code || ''),
+            name: String(p.name || ''),
+            price: safeNumber(p.price, 0),
+            stock: safeNumber(p.stock, 0),
+            minStock: safeNumber(p.minStock, 0),
+            active: p.active !== false
+          })),
+          sales: Array.isArray(saved.sales) ? saved.sales : [],
+          movements: Array.isArray(saved.movements) ? saved.movements : [],
+          users: Array.isArray(saved.users) && saved.users.length ? saved.users : DEFAULT_USERS.map(u => ({ ...u })),
+          settings: Object.assign({ currency: 'F CFA' }, saved.settings || {})
+        };
+        return;
+      }
+      state.db = defaultDB();
+      saveDB();
+    }
+
+    function saveDB() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.db)); }
+      catch { showMessage('Impossible de sauvegarder localement.', 'error'); }
+    }
+
+    function showMessage(text, type = 'success') {
+      const el = $('message');
+      el.textContent = text;
+      el.className = `message show ${type}`;
+      clearTimeout(window.messageTimer);
+      window.messageTimer = setTimeout(() => el.classList.remove('show'), 2600);
+    }
+
+    function getActiveProducts() {
+      return (state.db.products || []).filter(p => p.active !== false);
+    }
+
+    function hidePages() {
+      ['homePage', 'loginPage', 'registerPage', 'sellerPage', 'supervisorPage'].forEach(id => {
+        const el = $(id);
+        if (el) el.classList.add('hidden');
+      });
+    }
+
+    function backHome() {
+      stopScanner();
+      hidePages();
+      $('homePage').classList.remove('hidden');
+      state.currentRole = null;
+      state.currentUser = null;
+      updateHeader();
+    }
+
+    function updateHeader() {
+      $('headerUser').textContent = state.currentUser ? `${state.currentUser} • ${state.currentRole || ''}` : 'Non connecté';
+    }
+
+    function openLogin(role) {
+      state.currentRole = role;
+      hidePages();
+      $('loginPage').classList.remove('hidden');
+      $('loginTitle').textContent = role === 'vendeur' ? '👨‍💼 Connexion vendeur' : '🧑‍💼 Connexion superviseur';
+      $('loginDesc').textContent = role === 'vendeur' ? 'Accédez à la caisse et au traitement des ventes.' : 'Accédez au tableau de bord, au stock et aux ventes.';
+      $('loginName').value = '';
+      $('loginPin').value = '';
+      setTimeout(() => $('loginName').focus(), 50);
+    }
+
+    function openRegister() {
+      stopScanner();
+      hidePages();
+      $('registerPage').classList.remove('hidden');
+      ['registerName','registerPin','registerPinConfirm'].forEach(id => $(id).value = '');
+      setTimeout(() => $('registerName').focus(), 50);
+    }
+
+    function registerAccount() {
+      const name = $('registerName').value.trim();
+      const pin = $('registerPin').value.trim();
+      const confirmPin = $('registerPinConfirm').value.trim();
+      if (name.length < 2) return showMessage('Le nom doit contenir au moins 2 caractères.', 'error');
+      if (!/^\d{4,8}$/.test(pin)) return showMessage('Le PIN doit contenir 4 à 8 chiffres.', 'error');
+      if (pin !== confirmPin) return showMessage('Les deux PIN ne correspondent pas.', 'error');
+      const exists = (state.db.users || []).some(u => String(u.name).trim().toLowerCase() === name.toLowerCase());
+      if (exists) return showMessage('Ce nom/identifiant existe déjà.', 'error');
+      state.db.users.push({ name, pin, role: 'vendeur' });
+      saveDB();
+      state.currentRole = 'vendeur';
+      state.currentUser = name;
+      hidePages();
+      $('sellerPage').classList.remove('hidden');
+      showSellerTab('cash');
+      renderSellerStats(); renderProductPicker(); renderCart(); updatePayment(); updateHeader();
+      showMessage('Compte créé. Bienvenue !', 'success');
+    }
+
+    function login() {
+      const name = $('loginName').value.trim();
+      const pin = $('loginPin').value.trim();
+      if (!name || !pin) {
+        showMessage('Nom et PIN obligatoires.', 'error');
+        return;
+      }
+      const matched = (state.db.users || []).find(user =>
+        user.name.toLowerCase() === name.toLowerCase() && String(user.pin) === pin
+      );
+      if (!matched || matched.role !== state.currentRole) {
+        showMessage('Identifiants incorrects pour ce rôle.', 'error');
+        return;
+      }
+
+      state.currentUser = matched.name;
+      hidePages();
+
+      if (state.currentRole === 'vendeur') {
+        $('sellerPage').classList.remove('hidden');
+        showSellerTab('cash');
+        renderSellerStats();
+        renderProductPicker();
+        renderCart();
+        updatePayment();
+      } else {
+        $('supervisorPage').classList.remove('hidden');
+        showSupervisorTab('dashboard');
+        renderSupervisorAll();
+      }
+
+      updateHeader();
+      showMessage('Connexion réussie.', 'success');
+    }
+
+    function logout() {
+      stopScanner();
+      state.cart = [];
+      state.currentUser = null;
+      state.currentRole = null;
+      clearSale(true);
+      backHome();
+      showMessage('Session fermée.', 'info');
+    }
+
+    function showSellerTab(tab) {
+      const cash = $('sellerCashTab');
+      const history = $('sellerHistoryTab');
+      cash.classList.toggle('hidden', tab !== 'cash');
+      history.classList.toggle('hidden', tab !== 'history');
+      $('sellerTabCash').classList.toggle('active', tab === 'cash');
+      $('sellerTabHistory').classList.toggle('active', tab === 'history');
+      if (tab === 'history') renderSellerHistory();
+    }
+
+    function getProductByCode(code) {
+      const value = String(code || '').trim();
+      return getActiveProducts().find(p => p.code === value);
+    }
+
+    function addToCart(code) {
+      const product = typeof code === 'object' ? code : getProductByCode(code);
+      if (!product) {
+        showMessage('Produit introuvable.', 'error');
+        return;
+      }
+
+      const existing = state.cart.find(item => item.code === product.code);
+      if (existing) {
+        if (existing.quantity >= product.stock) {
+          showMessage('Stock insuffisant.', 'warning');
+          return;
+        }
+        existing.quantity += 1;
+      } else {
+        state.cart.push({
+          code: product.code,
+          name: product.name,
+          price: Number(product.price) || 0,
+          quantity: 1
+        });
+      }
+
+      renderCart();
+      updatePayment();
+    }
+
+    function renderProductPicker() {
+      const target = $('productPicker');
+      if (!target || !state.db) return;
+      const q = $('productSearch')?.value.trim().toLowerCase() || '';
+      const items = getActiveProducts().filter(product => !q || product.name.toLowerCase().includes(q) || product.code.toLowerCase().includes(q));
+
+      if (!items.length) {
+        target.innerHTML = '<div class="empty">Aucun produit trouvé.</div>';
+        return;
+      }
+
+      target.innerHTML = items.map(product => `
+        <div class="product-item" onclick="addToCart('${esc(product.code)}')">
+          <h4>${esc(product.name)}</h4>
+          <div class="meta">Code: ${esc(product.code)}</div>
+          <div class="meta">Prix: ${money(product.price)}</div>
+          <div class="meta">Stock: ${product.stock}</div>
+        </div>
+      `).join('');
+    }
+
+    function cartTotal() {
+      return state.cart.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity), 0);
+    }
+
+    function renderCart() {
+      const box = $('cartItems');
+      if (!box) return;
+      if (!state.cart.length) {
+        box.innerHTML = '<div class="cart-empty">🛒 Panier vide</div>';
+        $('paymentTotal').textContent = money(0);
+        $('paymentPaid').textContent = money(0);
+        $('paymentRest').textContent = money(0);
+        return;
+      }
+
+      box.innerHTML = state.cart.map(item => `
+        <div class="cart-item">
+          <div>
+            <h4>${esc(item.name)}</h4>
+            <div class="meta">${money(item.price)} / unité</div>
+          </div>
+          <div class="qty-box">
+            <button class="qty-btn" onclick="changeQty('${esc(item.code)}', -1)">−</button>
+            <b>${item.quantity}</b>
+            <button class="qty-btn" onclick="changeQty('${esc(item.code)}', 1)">+</button>
+            <button class="btn btn-danger btn-sm" onclick="removeCart('${esc(item.code)}')">Suppr.</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function changeQty(code, delta) {
+      const item = state.cart.find(x => x.code === String(code));
+      if (!item) return;
+
+      const product = getProductByCode(code);
+      const nextQty = item.quantity + delta;
+      if (nextQty <= 0) {
+        removeCart(code);
+        return;
+      }
+      if (product && nextQty > Number(product.stock)) {
+        showMessage('Stock insuffisant pour cette quantité.', 'warning');
+        return;
+      }
+
+      item.quantity = nextQty;
+      renderCart();
+      updatePayment();
+    }
+
+    function removeCart(code) {
+      state.cart = state.cart.filter(item => item.code !== String(code));
+      renderCart();
+      updatePayment();
+    }
+
+    function paymentValues() {
+      return {
+        cash: safeNumber($('cashAmount').value, 0),
+        wave: safeNumber($('waveAmount').value, 0),
+        orange: safeNumber($('orangeAmount').value, 0),
+        mtn: safeNumber($('mtnAmount').value, 0),
+        moov: safeNumber($('moovAmount').value, 0)
+      };
+    }
+
+    function updatePayment() {
+      const total = cartTotal();
+      const paid = Object.values(paymentValues()).reduce((sum, value) => sum + value, 0);
+      const rest = Math.max(total - paid, 0);
+
+      $('paymentTotal').textContent = money(total);
+      $('paymentPaid').textContent = money(paid);
+      $('paymentRest').textContent = money(rest);
+
+      const status = $('paymentStatus').value || 'PAYÉ';
+      $('paymentStatusLabel').textContent = status;
+
+      if (status === 'PAYÉ' && paid < total) $('paymentStatus').value = 'PARTIEL';
+      if (status === 'PARTIEL' && paid >= total) $('paymentStatus').value = 'PAYÉ';
+      if (status === 'NON PAYÉ' && paid > 0) $('paymentStatus').value = 'PARTIEL';
+    }
+
+    function clearSale(keepMessage = false) {
+      state.cart = [];
+      $('customerName').value = '';
+      $('paymentStatus').value = 'PAYÉ';
+      ['cashAmount','waveAmount','orangeAmount','mtnAmount','moovAmount'].forEach(id => $(id).value = '0');
+      renderCart();
+      updatePayment();
+      if (!keepMessage) showMessage('Vente réinitialisée.', 'info');
+    }
+
+    function validateSale() {
+      if (!state.cart.length) {
+        showMessage('Le panier est vide.', 'error');
+        return;
+      }
+
+      const total = cartTotal();
+      const payments = paymentValues();
+      const paid = Object.values(payments).reduce((sum, value) => sum + value, 0);
+      const status = $('paymentStatus').value || 'PAYÉ';
+      const customer = $('customerName').value.trim() || 'Client comptoir';
+      const now = new Date();
+      const sale = {
+        id: uid('V'),
+        timestamp: now.getTime(),
+        date: now.toLocaleString('fr-FR'),
+        customer,
+        cashier: state.currentUser,
+        items: state.cart.map(item => ({ ...item })),
+        total,
+        paid,
+        rest: Math.max(total - paid, 0),
+        status,
+        payments
+      };
+
+      if (status === 'PAYÉ' && paid < total) {
+        showMessage('Le montant payé est insuffisant pour un paiement complet.', 'error');
+        return;
+      }
+      for (const item of state.cart) {
+        const product = getProductByCode(item.code);
+        if (!product || Number(product.stock) < Number(item.quantity)) {
+          showMessage(`Stock insuffisant pour « ${item.name} ».`, 'error');
+          return;
+        }
+      }
+
+      for (const item of state.cart) {
+        const product = getProductByCode(item.code);
+        if (!product) continue;
+
+        const before = product.stock;
+        const after = Math.max(0, before - item.quantity);
+        product.stock = after;
+        state.db.movements.unshift({
+          id: uid('M'),
+          timestamp: now.getTime(),
+          date: now.toLocaleString('fr-FR'),
+          type: 'SORTIE',
+          reason: 'VENTE ' + sale.id,
+          code: item.code,
+          name: item.name,
+          quantity: item.quantity,
+          before,
+          after,
+          doneBy: state.currentUser
+        });
+      }
+
+      state.db.sales.unshift(sale);
+      saveDB();
+
+      renderProductPicker();
+      renderSellerStats();
+      renderSellerHistory();
+      renderSupervisorAll();
+      clearSale();
+      showMessage(`✅ Vente enregistrée : ${money(sale.total)}`, 'success');
+      printTicket(sale);
+    }
+
+    function renderSellerStats() {
+      const todayKey = new Date().toLocaleDateString('fr-FR');
+      const mySales = (state.db.sales || []).filter(s => s.cashier === state.currentUser);
+      const today = mySales.filter(s => String(s.date).startsWith(todayKey));
+      const totalToday = today.reduce((sum, s) => sum + Number(s.total || 0), 0);
+      const totalAll = mySales.reduce((sum, s) => sum + Number(s.total || 0), 0);
+
+      $('sellerStats').innerHTML = `
+        <div class="stat"><span>Ventes aujourd'hui</span><strong>${today.length}</strong></div>
+        <div class="stat"><span>CA du jour</span><strong>${money(totalToday)}</strong></div>
+        <div class="stat"><span>Mon total</span><strong>${money(totalAll)}</strong></div>
+        <div class="stat"><span>Reste à encaisser</span><strong>${money(mySales.reduce((sum, s) => sum + Number(s.rest || 0), 0))}</strong></div>
+      `;
+    }
+
+    function renderSellerHistory() {
+      const mySales = (state.db.sales || []).filter(s => s.cashier === state.currentUser).slice(0, 20);
+      const body = mySales.length ? mySales.map(s => `
+        <tr>
+          <td>${esc(s.id)}</td>
+          <td>${esc(s.date)}</td>
+          <td>${esc(s.customer)}</td>
+          <td>${money(s.total)}</td>
+          <td>${money(s.paid)}</td>
+          <td>${money(s.rest)}</td>
+          <td>${saleBadge(s.status)}</td>
+          <td><button class="link-btn" onclick="printTicketById('${esc(s.id)}')">Ticket</button></td>
+        </tr>
+      `).join('') : '<tr><td colspan="8"><div class="empty">Aucune vente enregistrée.</div></td></tr>';
+
+      $('sellerHistoryTab').innerHTML = `
+        <div class="card">
+          <div class="section-title"><h3>Mes ventes</h3><button class="btn btn-primary btn-sm" onclick="exportSellerCSV()">Export CSV</button></div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr><th>ID</th><th>Date</th><th>Client</th><th>Total</th><th>Payé</th><th>Reste</th><th>Statut</th><th>Ticket</th></tr>
+              </thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function saleBadge(status) {
+      const map = { PAYÉ: 'badge-green', PARTIEL: 'badge-orange', 'NON PAYÉ': 'badge-red' };
+      return `<span class="badge ${map[status] || 'badge-red'}">${esc(status)}</span>`;
+    }
+
+    async function openScanner() {
+      if (state.scannerBusy) return;
+      if (typeof Html5Qrcode === 'undefined') {
+        showMessage('Le module de scan n’est pas chargé. Utilisez la recherche manuelle.', 'error');
+        return;
+      }
+      if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        showMessage('La caméra nécessite HTTPS (ou localhost).', 'error');
+        return;
+      }
+
+      state.scannerBusy = true;
+      try {
+        await stopScanner();
+        const box = $('scannerBox');
+        if (!box) throw new Error('Zone scanner absente');
+        box.innerHTML = '';
+        $('scannerStatus').textContent = 'Demande d’accès à la caméra…';
+        $('scannerModal').classList.add('show');
+
+        const scanner = new Html5Qrcode('scannerBox', { verbose: false });
+        state.scanner = scanner;
+        state.scannerRunning = false;
+        state.scannerScanHandled = false;
+
+        let cameraConfig;
+        try {
+          const cameras = await Html5Qrcode.getCameras();
+          if (cameras && cameras.length) {
+            const rear = cameras.find(c => /back|rear|environment|arrière|principal/i.test(c.label || '')) || cameras[cameras.length - 1];
+            cameraConfig = { deviceId: { exact: rear.id } };
+          }
+        } catch (_) {
+          cameraConfig = { facingMode: { ideal: 'environment' } };
+        }
+        if (!cameraConfig) cameraConfig = { facingMode: { ideal: 'environment' } };
+
+        const config = {
+          fps: 8,
+          qrbox: (viewfinderWidth, viewfinderHeight) => {
+            const size = Math.max(180, Math.min(280, Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.72)));
+            return { width: size, height: size };
+          },
+          aspectRatio: 1,
+          disableFlip: false,
+          formatsToSupport: typeof Html5QrcodeSupportedFormats !== 'undefined'
+            ? [Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E, Html5QrcodeSupportedFormats.QR_CODE]
+            : undefined
+        };
+
+        await scanner.start(cameraConfig, config, handleScanSuccess, () => {});
+        state.scannerRunning = true;
+        $('scannerStatus').textContent = 'Caméra active — placez le code-barres dans le cadre.';
+      } catch (error) {
+        await stopScanner();
+        $('scannerModal')?.classList.remove('show');
+        const message = String(error?.message || error || '').toLowerCase();
+        if (message.includes('permission') || message.includes('notallowed')) {
+          showMessage('Accès caméra refusé. Autorisez la caméra dans le navigateur.', 'error');
+        } else {
+          showMessage('Impossible de démarrer la caméra. Vérifiez HTTPS et l’autorisation caméra.', 'error');
+        }
+      } finally {
+        state.scannerBusy = false;
+      }
+    }
+
+    async function handleScanSuccess(decodedText) {
+      const code = String(decodedText || '').trim();
+      if (!code || state.scannerScanHandled) return;
+      state.scannerScanHandled = true;
+      await stopScanner();
+
+      const product = getProductByCode(code);
+      if (product) {
+        addToCart(product);
+        showMessage(`Article scanné : ${product.name}`, 'success');
+        return;
+      }
+
+      state.unknownBarcode = code;
+      $('unknownCode').textContent = code;
+      $('unknownName').value = '';
+      $('unknownPrice').value = '';
+      $('unknownStock').value = '';
+      $('unknownMinStock').value = '0';
+      $('unknownModal').classList.add('show');
+      setTimeout(() => $('unknownName').focus(), 80);
+    }
+
+    async function closeScanner() {
+      $('scannerModal')?.classList.remove('show');
+      if (!state.scanner) {
+        const box = $('scannerBox');
+        if (box) box.innerHTML = '';
+        return;
+      }
+      const scanner = state.scanner;
+      state.scanner = null;
+      state.scannerRunning = false;
+      try {
+        if (typeof scanner.isScanning === 'function' && scanner.isScanning) {
+          await scanner.stop();
+        } else {
+          await scanner.stop().catch(() => {});
+        }
+      } catch (_) {}
+      try { await scanner.clear(); } catch (_) {}
+      const box = $('scannerBox');
+      if (box) box.innerHTML = '';
+      if ($('scannerStatus')) $('scannerStatus').textContent = 'Scanner arrêté.';
+    }
+
+    async function stopScanner() {
+      try { await closeScanner(); } catch (_) {}
+    }
+
+    function closeModal(id) {
+      $(id).classList.remove('show');
+    }
+
+    function createUnknownProduct() {
+      const code = String(state.unknownBarcode || '').trim();
+      const name = $('unknownName').value.trim();
+      const price = safeNumber($('unknownPrice').value, 0);
+      const stock = safeNumber($('unknownStock').value, 0);
+      const minStock = safeNumber($('unknownMinStock').value, 0);
+
+      if (!code || !name || price <= 0) {
+        showMessage('Saisissez au moins le nom et le prix.', 'error');
+        return;
+      }
+      if (state.db.products.some(p => String(p.code).trim() === code && p.active !== false)) {
+        closeModal('unknownModal');
+        const existing = getProductByCode(code);
+        if (existing) addToCart(existing);
+        showMessage('Ce code-barres existe déjà.', 'info');
+        return;
+      }
+
+      state.db.products.unshift({
+        id: uid('P'),
+        code,
+        name,
+        price,
+        stock,
+        minStock,
+        active: true
+      });
+      saveDB();
+      closeModal('unknownModal');
+      renderProductPicker();
+      renderSupervisorAll();
+      showMessage('Produit ajouté.', 'success');
+    }
+
+    function showSupervisorTab(tab) {
+      const tabs = ['dashboard','products','movements','sales','users','settings'];
+      tabs.forEach(name => {
+        const panel = $(`supervisor${name.charAt(0).toUpperCase() + name.slice(1)}Tab`);
+        if (panel) panel.classList.toggle('hidden', name !== tab);
+      });
+      document.querySelectorAll('.tab[data-tab]').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-tab') === tab));
+
+      if (tab === 'dashboard') renderDashboard();
+      if (tab === 'products') renderProductsAdmin();
+      if (tab === 'movements') renderMovements();
+      if (tab === 'sales') renderSalesAdmin();
+      if (tab === 'users') renderUsers();
+      if (tab === 'settings') renderSettings();
+    }
+
+    function renderSupervisorAll() {
+      renderDashboard();
+      renderProductsAdmin();
+      renderMovements();
+      renderSalesAdmin();
+      renderUsers();
+      renderSettings();
+      if (state.currentRole === 'vendeur') renderSellerStats();
+    }
+
+    function dashboardRange() {
+      const from = $('dashFrom') ? $('dashFrom').value : '';
+      const to = $('dashTo') ? $('dashTo').value : '';
+      if (!from && !to) return [...(state.db.sales || [])];
+
+      return (state.db.sales || []).filter(sale => {
+        const d = new Date(sale.timestamp || Date.parse(sale.date));
+        if (from && d < new Date(`${from}T00:00:00`)) return false;
+        if (to && d > new Date(`${to}T23:59:59`)) return false;
+        return true;
+      });
+    }
+
+    function renderDashboard() {
+      const sales = dashboardRange();
+      const ca = sales.reduce((sum, s) => sum + Number(s.total || 0), 0);
+      const paid = sales.reduce((sum, s) => sum + Number(s.paid || 0), 0);
+      const rest = sales.reduce((sum, s) => sum + Number(s.rest || 0), 0);
+      const units = sales.reduce((sum, s) => sum + (Array.isArray(s.items) ? s.items.reduce((acc, i) => acc + Number(i.quantity || 0), 0) : 0), 0);
+
+      $('supervisorDashboardTab').innerHTML = `
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title">
+            <h3>Filtres de période</h3>
+            <div class="actions">
+              <button class="btn btn-gray btn-sm" onclick="setDashRange('week')">7 jours</button>
+              <button class="btn btn-gray btn-sm" onclick="setDashRange('month')">Mois</button>
+              <button class="btn btn-gray btn-sm" onclick="setDashRange('all')">Tout</button>
+            </div>
+          </div>
+          <div class="filter-grid">
+            <div class="field"><label>Du</label><input id="dashFrom" type="date" /></div>
+            <div class="field"><label>Au</label><input id="dashTo" type="date" /></div>
+          </div>
+          <div class="grid stats">
+            <div class="stat"><span>Chiffre d'affaires</span><strong>${money(ca)}</strong></div>
+            <div class="stat"><span>Payé</span><strong>${money(paid)}</strong></div>
+            <div class="stat"><span>Reste</span><strong>${money(rest)}</strong></div>
+            <div class="stat"><span>Articles vendus</span><strong>${units}</strong></div>
+          </div>
+        </div>
+      `;
+
+      $('dashFrom')?.addEventListener('change', renderDashboard);
+      $('dashTo')?.addEventListener('change', renderDashboard);
+    }
+
+    function setDashRange(type) {
+      const now = new Date();
+      const to = now.toISOString().slice(0, 10);
+      let from = '';
+      if (type === 'week') {
+        const d = new Date(now); d.setDate(now.getDate() - 6); from = d.toISOString().slice(0, 10);
+      }
+      if (type === 'month') {
+        const d = new Date(now.getFullYear(), now.getMonth(), 1); from = d.toISOString().slice(0, 10);
+      }
+      $('dashFrom').value = from;
+      $('dashTo').value = to;
+      renderDashboard();
+    }
+
+    function renderProductsAdmin() {
+      const rows = getActiveProducts();
+      $('supervisorProductsTab').innerHTML = `
+        <div class="card">
+          <div class="section-title"><h3>📦 Catalogue</h3><div class="actions"><button class="btn btn-success btn-sm" onclick="openProductModal()">Ajouter</button></div></div>
+          <div class="field"><input id="adminProductSearch" type="text" placeholder="Recherche produit..." oninput="renderProductsTable()" /></div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Code</th><th>Nom</th><th>Prix</th><th>Stock</th><th>Min</th><th>Actions</th></tr></thead>
+              <tbody id="adminProductsBody">${rows.map(product => `
+                <tr>
+                  <td>${esc(product.code)}</td>
+                  <td>${esc(product.name)}</td>
+                  <td>${money(product.price)}</td>
+                  <td>${product.stock}</td>
+                  <td>${product.minStock || 0}</td>
+                  <td>
+                    <button class="link-btn" onclick="openProductModal('${esc(product.code)}')">Modifier</button> |
+                    <button class="link-btn" onclick="deleteProduct('${esc(product.code)}')">Suppr.</button> |
+                    <button class="link-btn" onclick="openMovementModal('${esc(product.code)}')">Mvt</button>
+                  </td>
+                </tr>
+              `).join('')}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProductsTable() {
+      const q = ($('adminProductSearch')?.value || '').toLowerCase();
+      const filtered = getActiveProducts().filter(p => !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q));
+      const body = filtered.map(product => `
+        <tr>
+          <td>${esc(product.code)}</td>
+          <td>${esc(product.name)}</td>
+          <td>${money(product.price)}</td>
+          <td>${product.stock}</td>
+          <td>${product.minStock || 0}</td>
+          <td>
+            <button class="link-btn" onclick="openProductModal('${esc(product.code)}')">Modifier</button> |
+            <button class="link-btn" onclick="deleteProduct('${esc(product.code)}')">Suppr.</button> |
+            <button class="link-btn" onclick="openMovementModal('${esc(product.code)}')">Mvt</button>
+          </td>
+        </tr>
+      `).join('');
+      const tbody = $('adminProductsBody');
+      if (tbody) tbody.innerHTML = body || '<tr><td colspan="6"><div class="empty">Aucun produit</div></td></tr>';
+    }
+
+    function openProductModal(code = null) {
+      state.editingProductCode = code;
+      $('productModalTitle').textContent = code ? 'Modifier le produit' : 'Ajouter un produit';
+      const product = code ? getProductByCode(code) : null;
+      $('editProductCode').value = product ? product.code : '';
+      $('editProductName').value = product ? product.name : '';
+      $('editProductPrice').value = product ? product.price : '';
+      $('editProductStock').value = product ? product.stock : '';
+      $('editProductMinStock').value = product ? (product.minStock || 0) : 0;
+      $('productModal').classList.add('show');
+    }
+
+    function saveProduct() {
+      const code = $('editProductCode').value.trim();
+      const name = $('editProductName').value.trim();
+      const price = safeNumber($('editProductPrice').value, 0);
+      const stock = safeNumber($('editProductStock').value, 0);
+      const minStock = safeNumber($('editProductMinStock').value, 0);
+
+      if (!code || !name || price <= 0) {
+        showMessage('Code, nom et prix sont obligatoires.', 'error');
+        return;
+      }
+
+      const editing = state.editingProductCode ? state.db.products.find(p => p.code === state.editingProductCode) : null;
+      const duplicate = state.db.products.find(p => p.active !== false && p.code === code && (!editing || p.id !== editing.id));
+      if (duplicate) {
+        showMessage('Ce code-barres existe déjà.', 'error');
+        return;
+      }
+
+      if (state.editingProductCode) {
+        const product = getProductByCode(state.editingProductCode);
+        if (!product) return;
+        product.code = code;
+        product.name = name;
+        product.price = price;
+        product.stock = stock;
+        product.minStock = minStock;
+      } else {
+        state.db.products.unshift({ id: uid('P'), code, name, price, stock, minStock, active: true });
+      }
+
+      saveDB();
+      closeModal('productModal');
+      renderProductPicker();
+      renderSupervisorAll();
+      showMessage('Produit enregistré.', 'success');
+    }
+
+    function deleteProduct(code) {
+      const product = getProductByCode(code);
+      if (!product) return;
+      if (!confirm(`Supprimer « ${product.name} » du catalogue ?`)) return;
+
+      product.active = false;
+      saveDB();
+      renderProductPicker();
+      renderProductsAdmin();
+      renderSupervisorAll();
+      showMessage('Produit désactivé.', 'info');
+    }
+
+    function openMovementModal(code) {
+      const product = getProductByCode(code);
+      if (!product) return;
+      $('movementProductCode').value = product.code;
+      $('movementProductLabel').innerHTML = `Produit : <b>${esc(product.name)}</b> — stock actuel : <b>${product.stock}</b>`;
+      $('movementQty').value = '1';
+      $('movementReason').value = '';
+      $('movementType').value = 'ENTREE';
+      $('movementModal').classList.add('show');
+    }
+
+    function saveMovement() {
+      const code = $('movementProductCode').value.trim();
+      const product = getProductByCode(code);
+      const type = $('movementType').value;
+      const quantity = safeNumber($('movementQty').value, 0);
+      const reason = $('movementReason').value.trim() || type;
+
+      if (!product || quantity <= 0) {
+        showMessage('Quantité invalide.', 'error');
+        return;
+      }
+
+      const before = product.stock;
+      let after = before;
+      if (type === 'ENTREE') after = before + quantity;
+      if (type === 'SORTIE') after = Math.max(0, before - quantity);
+      if (type === 'AJUSTEMENT') after = Math.max(0, before + quantity);
+      product.stock = after;
+
+      state.db.movements.unshift({
+        id: uid('M'),
+        timestamp: Date.now(),
+        date: new Date().toLocaleString('fr-FR'),
+        type,
+        code: product.code,
+        name: product.name,
+        quantity,
+        before,
+        after,
+        reason,
+        doneBy: state.currentUser || 'system'
+      });
+
+      saveDB();
+      closeModal('movementModal');
+      renderSupervisorAll();
+      renderProductPicker();
+      showMessage('Mouvement enregistré.', 'success');
+    }
+
+    function renderMovements() {
+      const rows = (state.db.movements || []).slice(0, 200);
+      const body = rows.length ? rows.map(m => `
+        <tr>
+          <td>${esc(m.date)}</td>
+          <td>${esc(m.type)}</td>
+          <td>${esc(m.code)}</td>
+          <td>${esc(m.name)}</td>
+          <td>${m.quantity}</td>
+          <td>${m.before}</td>
+          <td>${m.after}</td>
+          <td>${esc(m.reason)}</td>
+          <td>${esc(m.doneBy || '')}</td>
+        </tr>
+      `).join('') : '<tr><td colspan="9"><div class="empty">Aucun mouvement.</div></td></tr>';
+
+      $('supervisorMovementsTab').innerHTML = `
+        <div class="card">
+          <div class="section-title"><h3>🔄 Journal des mouvements</h3><button class="btn btn-primary btn-sm" onclick="exportMovementsCSV()">Exporter</button></div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Date</th><th>Type</th><th>Code</th><th>Produit</th><th>Qté</th><th>Avant</th><th>Après</th><th>Motif</th><th>Utilisateur</th></tr></thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSalesAdmin() {
+      const rows = (state.db.sales || []).slice(0, 120);
+      const body = rows.length ? rows.map(s => `
+        <tr>
+          <td>${esc(s.id)}</td>
+          <td>${esc(s.date)}</td>
+          <td>${esc(s.cashier || '')}</td>
+          <td>${esc(s.customer)}</td>
+          <td>${money(s.total)}</td>
+          <td>${money(s.paid)}</td>
+          <td>${money(s.rest)}</td>
+          <td>${saleBadge(s.status)}</td>
+          <td><button class="link-btn" onclick="printTicketById('${esc(s.id)}')">Ticket</button></td>
+        </tr>
+      `).join('') : '<tr><td colspan="9"><div class="empty">Aucune vente.</div></td></tr>';
+
+      $('supervisorSalesTab').innerHTML = `
+        <div class="card">
+          <div class="section-title"><h3>🧾 Historique des ventes</h3><button class="btn btn-primary btn-sm" onclick="exportCSV()">Export CSV</button></div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>ID</th><th>Date</th><th>Vendeur</th><th>Client</th><th>Total</th><th>Payé</th><th>Reste</th><th>Statut</th><th>Ticket</th></tr></thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderUsers() {
+      const users = state.db.users || [];
+      const rows = users.map((user, index) => `
+        <tr>
+          <td>${esc(user.name)}</td>
+          <td>${user.role}</td>
+          <td>••••</td>
+          <td><button class="link-btn" onclick="deleteUser(${index})">Supprimer</button></td>
+        </tr>
+      `).join('');
+
+      $('supervisorUsersTab').innerHTML = `
+        <div class="card">
+          <div class="section-title"><h3>👥 Utilisateurs</h3><button class="btn btn-success btn-sm" onclick="openModal('userModal')">Ajouter</button></div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Nom</th><th>Rôle</th><th>PIN</th><th>Action</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function openModal(id) {
+      $(id).classList.add('show');
+    }
+
+    function saveUser() {
+      const name = $('newUserName').value.trim();
+      const pin = $('newUserPin').value.trim();
+      const role = $('newUserRole').value;
+      if (!name || !/^\d{4,8}$/.test(pin)) {
+        showMessage('Nom et PIN valide requis (4 à 8 chiffres).', 'error');
+        return;
+      }
+      if ((state.db.users || []).some(u => String(u.name).toLowerCase() === name.toLowerCase())) {
+        showMessage('Cet utilisateur existe déjà.', 'error');
+        return;
+      }
+
+      state.db.users.push({ name, pin, role });
+      saveDB();
+      closeModal('userModal');
+      renderUsers();
+      showMessage('Utilisateur ajouté.', 'success');
+    }
+
+    function deleteUser(index) {
+      if (!confirm('Supprimer cet utilisateur ?')) return;
+      state.db.users.splice(index, 1);
+      saveDB();
+      renderUsers();
+    }
+
+    function renderSettings() {
+      $('supervisorSettingsTab').innerHTML = `
+        <div class="grid two">
+          <div class="card"><h3>💾 Sauvegarde</h3><p class="muted">Téléchargez toutes les données locales de l'application.</p><button class="btn btn-primary" onclick="backupData()">Télécharger le backup</button></div>
+          <div class="card"><h3>📥 Restauration</h3><p class="muted">Restaurez un fichier JSON de sauvegarde.</p><input id="restoreFile" type="file" accept=".json" onchange="restoreData(event)" /></div>
+          <div class="card danger-zone"><h3>⚠️ Réinitialisation</h3><p class="muted">Supprime toutes les données locales enregistrées dans le navigateur.</p><button class="btn btn-danger" onclick="resetAllData()">Tout réinitialiser</button></div>
+        </div>
+      `;
+    }
+
+    function csvEscape(value) {
+      const s = String(value ?? '').replace(/"/g, '""');
+      return `"${s}"`;
+    }
+
+    function downloadText(content, filename, type = 'application/json') {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function exportCSV() {
+      const rows = [['ID','Date','Vendeur','Client','Articles','Total','Payé','Reste','Statut','Espèces','Wave','Orange Money','MTN Money','Moov Money']];
+      (state.db.sales || []).forEach(sale => {
+        rows.push([
+          sale.id,
+          sale.date,
+          sale.cashier || '',
+          sale.customer || '',
+          (sale.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0),
+          sale.total,
+          sale.paid,
+          sale.rest,
+          sale.status,
+          sale.payments?.cash || 0,
+          sale.payments?.wave || 0,
+          sale.payments?.orange || 0,
+          sale.payments?.mtn || 0,
+          sale.payments?.moov || 0
+        ]);
+      });
+      const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n');
+      downloadText(csv, 'gestion-commerce-export.csv', 'text/csv;charset=utf-8');
+      showMessage('Export CSV généré.', 'success');
+    }
+
+    function exportSellerCSV() {
+      const rows = [['ID','Date','Client','Total','Payé','Reste','Statut']];
+      (state.db.sales || []).filter(s => s.cashier === state.currentUser).forEach(sale => rows.push([sale.id, sale.date, sale.customer, sale.total, sale.paid, sale.rest, sale.status]));
+      const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n');
+      downloadText(csv, `ventes-${state.currentUser}.csv`, 'text/csv;charset=utf-8');
+    }
+
+    function exportMovementsCSV() {
+      const rows = [['Date','Type','Code','Produit','Quantité','Avant','Après','Motif','Utilisateur']];
+      (state.db.movements || []).forEach(m => rows.push([m.date, m.type, m.code, m.name, m.quantity, m.before, m.after, m.reason, m.doneBy || '']));
+      const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n');
+      downloadText(csv, 'mouvements-stock.csv', 'text/csv;charset=utf-8');
+    }
+
+    function backupData() {
+      const payload = { ...state.db, exportedAt: new Date().toISOString(), app: 'Gestion Commerce 3.0' };
+      downloadText(JSON.stringify(payload, null, 2), 'gestion-commerce-backup-v2.json', 'application/json');
+      showMessage('Backup téléchargé.', 'success');
+    }
+
+    function restoreData(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          if (!data || ![2,3].includes(Number(data.version)) || !Array.isArray(data.products)) throw new Error('Fichier invalide');
+          state.db = {
+            version: 3,
+            products: data.products,
+            sales: data.sales || [],
+            movements: data.movements || [],
+            users: data.users && data.users.length ? data.users : DEFAULT_USERS.map(u => ({ ...u })),
+            settings: Object.assign({ currency: 'F CFA' }, data.settings || {})
+          };
+          saveDB();
+          renderSupervisorAll();
+          if (state.currentRole === 'vendeur') {
+            renderSellerStats();
+            renderProductPicker();
+          }
+          showMessage('Données restaurées.', 'success');
+        } catch {
+          showMessage('Fichier de sauvegarde invalide.', 'error');
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetAllData() {
+      if (!confirm('ATTENTION : supprimer toutes les données locales ?')) return;
+      if (!confirm('Dernière confirmation : cette action est irréversible.')) return;
+
+      localStorage.removeItem(STORAGE_KEY);
+      state.db = defaultDB();
+      saveDB();
+      state.cart = [];
+      renderSupervisorAll();
+      renderProductPicker();
+      renderCart();
+      showMessage('Données réinitialisées.', 'warning');
+    }
+
+    function printCurrentTicket() {
+      if (!state.cart.length) {
+        showMessage('Le panier est vide.', 'error');
+        return;
+      }
+
+      const draft = {
+        id: 'BROUILLON',
+        date: new Date().toLocaleString('fr-FR'),
+        customer: $('customerName').value.trim() || 'Client comptoir',
+        cashier: state.currentUser || 'Inconnu',
+        items: state.cart.map(item => ({ ...item })),
+        total: cartTotal(),
+        paid: Object.values(paymentValues()).reduce((sum, value) => sum + value, 0),
+        rest: Math.max(cartTotal() - Object.values(paymentValues()).reduce((sum, value) => sum + value, 0), 0),
+        status: $('paymentStatus').value || 'PAYÉ'
+      };
+      printTicket(draft);
+    }
+
+    function printTicketById(id) {
+      const sale = (state.db.sales || []).find(item => item.id === id);
+      if (sale) printTicket(sale);
+    }
+
+    function printTicket(sale) {
+      const win = window.open('', '_blank', 'width=430,height=700');
+      if (!win) {
+        showMessage('Autorisez les popups pour imprimer le ticket.', 'error');
+        return;
+      }
+
+      const rows = (sale.items || []).map(item => `
+        <tr>
+          <td>${esc(item.name)}</td>
+          <td>${item.quantity}</td>
+          <td>${money(item.price)}</td>
+          <td>${money(item.price * item.quantity)}</td>
+        </tr>
+      `).join('');
+
+      win.document.write(`
+        <!doctype html>
+        <html>
+          <head>
+            <meta charset="UTF-8" />
+            <title>Ticket de vente</title>
+            <style>
+              body { font-family:Arial,sans-serif; padding:16px; color:#111; }
+              h2 { text-align:center; margin:0 0 12px; }
+              .meta { font-size:12px; line-height:1.5; }
+              table { width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
+              th, td { padding:6px 4px; border-bottom:1px solid #ddd; text-align:left; }
+              .total { margin-top:12px; font-weight:700; font-size:18px; }
+              .small { font-size:12px; }
+            </style>
+          </head>
+          <body>
+            <h2>Gestion Commerce</h2>
+            <div class="meta">
+              <div><b>ID:</b> ${esc(sale.id)}</div>
+              <div><b>Date:</b> ${esc(sale.date)}</div>
+              <div><b>Client:</b> ${esc(sale.customer || 'Client comptoir')}</div>
+              <div><b>Vendeur:</b> ${esc(sale.cashier || 'N/A')}</div>
+            </div>
+            <table>
+              <thead>
+                <tr><th>Produit</th><th>Qté</th><th>PU</th><th>Total</th></tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <div class="total">Total: ${money(sale.total)}</div>
+            <div class="small">Payé: ${money(sale.paid)}</div>
+            <div class="small">Reste: ${money(sale.rest)}</div>
+            <div class="small">Statut: ${esc(sale.status || 'PAYÉ')}</div>
+            <div class="small">Merci pour votre achat.</div>
+          </body>
+        </html>
+      `);
+      win.document.close();
+      setTimeout(() => { try { win.focus(); win.print(); } catch (_) {} }, 350);
+    }
+
+    function init() {
+      loadDB();
+      hidePages();
+      $('homePage').classList.remove('hidden');
+      updateHeader();
+      // Les vues métier sont rendues uniquement après connexion.
+      // Cela évite qu’une vue cachée ou incomplète bloque le chargement initial.
+    }
+
+    window.addEventListener('pagehide', () => { stopScanner(); });
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
